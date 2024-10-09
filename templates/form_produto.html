@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if produto %}Editar Produto{% else %}Novo Produto{% endif %}</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            width: 50%;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        input[type="text"],
+        input[type="number"],
+        textarea {
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            width: 100%;
+        }
+        textarea {
+            height: 100px;
+            resize: none;
+        }
+        button {
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .cancel-btn {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: #f44336;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .cancel-btn:hover {
+            background-color: #e53935;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>{% if produto %}Editar Produto{% else %}Novo Produto{% endif %}</h1>
+    <form method="POST">
+        <label for="nome">Nome:</label>
+        <input type="text" id="nome" name="nome" value="{{ produto.nome if produto else '' }}" required>
+
+        <label for="descricao">Descrição:</label>
+        <textarea id="descricao" name="descricao" required>{{ produto.descricao if produto else '' }}</textarea>
+
+        <label for="preco">Preço:</label>
+        <input type="text" id="preco" name="preco" value="{{ produto.preco if produto else '' }}" required>
+
+        <label for="estoque">Estoque:</label>
+        <input type="number" id="estoque" name="estoque" value="{{ produto.estoque if produto else '' }}" required>
+
+        <button type="submit">Salvar</button>
+    </form>
+    <a href="{{ url_for('lista_produtos') }}" class="cancel-btn">Cancelar</a>
+</div>
+
+</body>
+</html>

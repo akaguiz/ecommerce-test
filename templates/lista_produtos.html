@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Produtos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        .container {
+            width: 80%;
+            margin: 0 auto;
+        }
+        .add-product {
+            display: inline-block;
+            margin-bottom: 20px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .add-product:hover {
+            background-color: #45a049;
+        }
+        .product-list {
+            list-style: none;
+            padding: 0;
+        }
+        .product-list li {
+            background-color: white;
+            margin-bottom: 10px;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .product-info {
+            font-size: 18px;
+        }
+        .product-info strong {
+            color: #333;
+        }
+        .product-info span {
+            font-size: 16px;
+            color: #666;
+        }
+        .actions a {
+            margin-left: 10px;
+            padding: 8px 15px;
+            background-color: #007BFF;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .actions a:hover {
+            background-color: #0056b3;
+        }
+        .actions a.delete {
+            background-color: #dc3545;
+        }
+        .actions a.delete:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Lista de Produtos</h1>
+    <a href="{{ url_for('criar_produto') }}" class="add-product">Adicionar Produto</a>
+    <form action="{{ url_for('logout') }}" method="POST" style="display:inline;">
+        <button type="submit" class="logout-button">Logout</button>
+    </form>
+    <ul class="product-list">
+        {% for produto in produtos %}
+            <li>
+                <div class="product-info">
+                    <strong>{{ produto.nome }}</strong> <span>- R${{ produto.preco }}</span>
+                </div>
+                <div class="actions">
+                    <a href="{{ url_for('atualizar_produto', id=produto.id) }}">Editar</a>
+                    <a href="{{ url_for('deletar_produto', id=produto.id) }}" class="delete">Deletar</a>
+                </div>
+            </li>
+        {% endfor %}
+    </ul>
+</div>
+
+</body>
+</html>
