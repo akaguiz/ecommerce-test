@@ -1,170 +1,177 @@
+# app.py
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-
-# Configurar banco de dados SQLite
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///produtos.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = 'supersecretkey'
-
+app.config['SECRET_KEY'] = 'your_secret_key_here'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///inventory.db'
 db = SQLAlchemy(app)
-
-# Configuração do Flask-Login
-login_manager = LoginManager()
-login_manager.init_app(app)
+login_manager = LoginManager(app)
 login_manager.login_view = 'login'
+login_manager.login_message_category = 'error'
 
-# Modelo Produto
-class Produto(db.Model):
+# User Model
+class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    nome = db.Column(db.String(200), nullable=False)
-    descricao = db.Column(db.Text, nullable=False)
-    preco = db.Column(db.Float, nullable=False)
-    estoque = db.Column(db.Integer, nullable=False)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.String(120), nullable=False)
+    items = db.relationship('Item', backref='owner', lazy=True)
 
-    def __repr__(self):
-        return f'<Produto {self.nome}>'
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
 
-# Modelo Usuário
-class Usuario(UserMixin, db.Model):
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+# Item Model
+class Item(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(100), unique=True, nullable=False)
-    password = db.Column(db.String(100), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    quantity = db.Column(db.Integer, default=0)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
-# Criar banco de dados
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+# Create tables
 with app.app_context():
     db.create_all()
 
-# Função para carregar o usuário atual
-@login_manager.user_loader
-def load_user(user_id):
-    return Usuario.query.get(int(user_id))
-
-# Rota para criar novo usuário
-@app.route('/registrar', methods=['GET', 'POST'])
-def registrar():
+# Authentication routes
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    
     if request.method == 'POST':
         username = request.form['username']
+        email = request.form['email']
         password = request.form['password']
+        confirm_password = request.form['confirm_password']
 
-        # Verificar se o nome de usuário já existe
-        usuario_existente = Usuario.query.filter_by(username=username).first()
-        if usuario_existente:
-            flash('Nome de usuário já está em uso.', 'danger')
-            return redirect(url_for('registrar'))
+        if password != confirm_password:
+            flash('Passwords do not match!', 'error')
+            return redirect(url_for('register'))
 
-        # Criar novo usuário
-        novo_usuario = Usuario(username=username, password=password)
-        db.session.add(novo_usuario)
-        db.session.commit()
+        user_exists = User.query.filter_by(username=username).first()
+        email_exists = User.query.filter_by(email=email).first()
+
+        if user_exists:
+            flash('Username already exists!', 'error')
+            return redirect(url_for('register'))
         
-        flash('Usuário criado com sucesso! Faça login.', 'success')
+        if email_exists:
+            flash('Email already registered!', 'error')
+            return redirect(url_for('register'))
+
+        user = User(username=username, email=email)
+        user.set_password(password)
+        
+        db.session.add(user)
+        db.session.commit()
+
+        flash('Registration successful! Please login.', 'success')
         return redirect(url_for('login'))
 
-    return render_template('registrar.html')
+    return render_template('register.html')
 
-# Rota de login
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        user = Usuario.query.filter_by(username=username).first()
-        if user and user.password == password:
-            login_user(user)
-            flash('Login realizado com sucesso!', 'success')
-            return redirect(url_for('lista_produtos'))
+        user = User.query.filter_by(username=username).first()
+
+        if user and user.check_password(password):
+            login_user(user, remember=True)
+            next_page = request.args.get('next')
+            return redirect(next_page or url_for('index'))
         else:
-            flash('Credenciais inválidas. Tente novamente.', 'danger')
+            flash('Invalid username or password!', 'error')
+
     return render_template('login.html')
 
-
-# Rota temporária para listar os usuários
-@app.route('/listar_usuarios')
-def listar_usuarios():
-    usuarios = Usuario.query.all()
-    return render_template('listar_usuarios.html', usuarios=usuarios)
-
-# Rota de logout
-@app.route('/logout', methods=['POST'])
+@app.route('/logout')
 @login_required
 def logout():
     logout_user()
-    flash('Você saiu da sua conta.', 'info')
+    flash('Logged out successfully!', 'success')
     return redirect(url_for('login'))
 
-# Rota para alterar o nome de usuário e a senha
-@app.route('/alterar_credenciais', methods=['GET', 'POST'])
-@login_required
-def alterar_credenciais():
-    if request.method == 'POST':
-        novo_username = request.form['username']
-        nova_senha = request.form['password']
-
-        # Verificar se o nome de usuário já existe
-        usuario_existente = Usuario.query.filter_by(username=novo_username).first()
-        if usuario_existente and usuario_existente.id != current_user.id:
-            flash('Nome de usuário já está em uso por outro usuário.', 'danger')
-            return redirect(url_for('alterar_credenciais'))
-
-        # Atualizar as credenciais
-        current_user.username = novo_username
-        current_user.password = nova_senha
-        db.session.commit()
-
-        flash('Credenciais atualizadas com sucesso!', 'success')
-        return redirect(url_for('lista_produtos'))
-    
-    return render_template('alterar_credenciais.html', usuario=current_user)
-
-# Rota para listar produtos (apenas para usuários logados)
+# Protected CRUD routes
 @app.route('/')
 @login_required
-def lista_produtos():
-    produtos = Produto.query.all()
-    return render_template('lista_produtos.html', produtos=produtos)
+def index():
+    items = Item.query.filter_by(user_id=current_user.id).all()
+    return render_template('index.html', items=items)
 
-# Rota para criar novo produto
-@app.route('/novo', methods=['GET', 'POST'])
+@app.route('/add', methods=['GET', 'POST'])
 @login_required
-def criar_produto():
+def add():
     if request.method == 'POST':
-        nome = request.form['nome']
-        descricao = request.form['descricao']
-        preco = float(request.form['preco'])
-        estoque = int(request.form['estoque'])
-        novo_produto = Produto(nome=nome, descricao=descricao, preco=preco, estoque=estoque)
-        db.session.add(novo_produto)
+        name = request.form['name']
+        description = request.form['description']
+        quantity = int(request.form['quantity'])
+        
+        new_item = Item(
+            name=name, 
+            description=description, 
+            quantity=quantity,
+            user_id=current_user.id
+        )
+        
+        db.session.add(new_item)
         db.session.commit()
-        return redirect(url_for('lista_produtos'))
-    return render_template('form_produto.html')
+        
+        flash('Item added successfully!', 'success')
+        return redirect(url_for('index'))
+    
+    return render_template('add.html')
 
-# Rota para atualizar produto
-@app.route('/<int:id>/editar', methods=['GET', 'POST'])
+@app.route('/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
-def atualizar_produto(id):
-    produto = Produto.query.get_or_404(id)
+def edit(id):
+    item = Item.query.get_or_404(id)
+    
+    # Check if the item belongs to the current user
+    if item.user_id != current_user.id:
+        flash('Access denied!', 'error')
+        return redirect(url_for('index'))
+    
     if request.method == 'POST':
-        produto.nome = request.form['nome']
-        produto.descricao = request.form['descricao']
-        produto.preco = float(request.form['preco'])
-        produto.estoque = int(request.form['estoque'])
+        item.name = request.form['name']
+        item.description = request.form['description']
+        item.quantity = int(request.form['quantity'])
+        
         db.session.commit()
-        return redirect(url_for('lista_produtos'))
-    return render_template('form_produto.html', produto=produto)
+        flash('Item updated successfully!', 'success')
+        return redirect(url_for('index'))
+    
+    return render_template('edit.html', item=item)
 
-# Rota para deletar produto
-@app.route('/<int:id>/deletar', methods=['GET', 'POST'])
+@app.route('/delete/<int:id>')
 @login_required
-def deletar_produto(id):
-    produto = Produto.query.get_or_404(id)
-    if request.method == 'POST':
-        db.session.delete(produto)
-        db.session.commit()
-        return redirect(url_for('lista_produtos'))
-    return render_template('deletar_produto.html', produto=produto)
+def delete(id):
+    item = Item.query.get_or_404(id)
+    
+    # Check if the item belongs to the current user
+    if item.user_id != current_user.id:
+        flash('Access denied!', 'error')
+        return redirect(url_for('index'))
+        
+    db.session.delete(item)
+    db.session.commit()
+    
+    flash('Item deleted successfully!', 'success')
+    return redirect(url_for('index'))
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md mx-auto">
+        <!-- Logo/Branding -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-extrabold text-gray-900">
+                Create your account
+            </h1>
+            <p class="mt-2 text-sm text-gray-600">
+                Join thousands of others in our community
+            </p>
+        </div>
+
+        <!-- Main Card -->
+        <div class="bg-white rounded-xl shadow-lg p-8">
+            <form method="POST" class="space-y-6" id="registrationForm" novalidate>
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="p-4 mb-4 rounded-lg {% if category == 'error' %}bg-red-50 text-red-700{% else %}bg-green-50 text-green-700{% endif %}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <!-- Username Field -->
+                <div>
+                    <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
+                    <div class="mt-1 relative rounded-md shadow-sm">
+                        <input type="text" name="username" id="username" required
+                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            placeholder="Choose a username"
+                            pattern="^[a-zA-Z0-9_]{3,20}$"
+                            title="Username must be 3-20 characters long and can only contain letters, numbers, and underscores">
+                        <div class="hidden mt-1 text-sm text-red-600" id="username-error"></div>
+                    </div>
+                    <p class="mt-1 text-xs text-gray-500">3-20 characters, letters, numbers, and underscores only</p>
+                </div>
+
+                <!-- Email Field -->
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700">Email address</label>
+                    <div class="mt-1 relative rounded-md shadow-sm">
+                        <input type="email" name="email" id="email" required
+                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            placeholder="you@example.com">
+                        <div class="hidden mt-1 text-sm text-red-600" id="email-error"></div>
+                    </div>
+                </div>
+
+                <!-- Password Field -->
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                    <div class="mt-1 relative rounded-md shadow-sm">
+                        <input type="password" name="password" id="password" required
+                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            placeholder="••••••••"
+                            pattern="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$"
+                            title="Password must be at least 8 characters long and include both letters and numbers">
+                        <button type="button" 
+                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-500"
+                            onclick="togglePassword('password')">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                        </button>
+                        <div class="hidden mt-1 text-sm text-red-600" id="password-error"></div>
+                    </div>
+                    <div class="mt-1 space-y-1">
+                        <p class="text-xs text-gray-500">Password must:</p>
+                        <ul class="text-xs text-gray-500 list-disc list-inside">
+                            <li>Be at least 8 characters long</li>
+                            <li>Include at least one letter and one number</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Confirm Password Field -->
+                <div>
+                    <label for="confirm_password" class="block text-sm font-medium text-gray-700">Confirm password</label>
+                    <div class="mt-1 relative rounded-md shadow-sm">
+                        <input type="password" name="confirm_password" id="confirm_password" required
+                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            placeholder="••••••••">
+                        <button type="button" 
+                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-500"
+                            onclick="togglePassword('confirm_password')">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                        </button>
+                        <div class="hidden mt-1 text-sm text-red-600" id="confirm-password-error"></div>
+                    </div>
+                </div>
+
+                <!-- Terms and Privacy Policy -->
+                <div class="flex items-start">
+                    <div class="flex items-center h-5">
+                        <input id="terms" name="terms" type="checkbox" required
+                            class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                    </div>
+                    <div class="ml-3 text-sm">
+                        <label for="terms" class="font-medium text-gray-700">I agree to the</label>
+                        <a href="#" class="text-blue-600 hover:text-blue-500"> Terms of Service </a>
+                        <span class="text-gray-700">and</span>
+                        <a href="#" class="text-blue-600 hover:text-blue-500"> Privacy Policy</a>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div>
+                    <button type="submit" 
+                        class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+                        Create account
+                    </button>
+                </div>
+
+                <!-- Login Link -->
+                <div class="text-center">
+                    <p class="text-sm text-gray-600">
+                        Already have an account?
+                        <a href="{{ url_for('login') }}" class="font-medium text-blue-600 hover:text-blue-500 transition-colors duration-200">
+                            Sign in instead
+                        </a>
+                    </p>
+                </div>
+            </form>
+        </div>
+
+        <!-- Social Sign-up Options -->
+        <div class="mt-6">
+            <div class="relative">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-gray-300"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                    <span class="px-2 bg-gray-50 text-gray-500">Or continue with</span>
+                </div>
+            </div>
+
+            <div class="mt-6 grid grid-cols-2 gap-3">
+                <a href="#" class="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 transition-colors duration-200">
+                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12.24 10.285V14.4h6.806c-.275 1.765-2.056 5.174-6.806 5.174-4.095 0-7.439-3.389-7.439-7.574s3.345-7.574 7.439-7.574c2.33 0 3.891.989 4.785 1.849l3.254-3.138C18.189 1.186 15.479 0 12.24 0c-6.635 0-12 5.365-12 12s5.365 12 12 12c6.926 0 11.52-4.869 11.52-11.726 0-.788-.085-1.39-.189-1.989H12.24z"/>
+                    </svg>
+                </a>
+
+                <a href="#" class="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 transition-colors duration-200">
+                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M20 10c0-5.523-4.477-10-10-10S0 4.477 0 10c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V10h2.54V7.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V10h2.773l-.443 2.89h-2.33v6.988C16.343 19.128 20 14.991 20 10z" clip-rule="evenodd"/>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function togglePassword(inputId) {
+    const input = document.getElementById(inputId);
+    input.type = input.type === 'password' ? 'text' : 'password';
+}
+
+document.getElementById('registrationForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+    let isValid = true;
+
+    // Username validation
+    const username = document.getElementById('username');
+    const usernameError = document.getElementById('username-error');
+    if (!username.checkValidity()) {
+        usernameError.textContent = username.title;
+        usernameError.classList.remove('hidden');
+        isValid = false;
+    } else {
+        usernameError.classList.add('hidden');
+    }
+
+    // Email validation
+    const email = document.getElementById('email');
+    const emailError = document.getElementById('email-error');
+    if (!email.checkValidity()) {
+        emailError.textContent = 'Please enter a valid email address';
+        emailError.classList.remove('hidden');
+        isValid = false;
+    } else {
+        emailError.classList.add('hidden');
+    }
+
+    // Password validation
+    const password = document.getElementById('password');
+    const passwordError = document.getElementById('password-error');
+    if (!password.checkValidity()) {
+        passwordError.textContent = password.title;
+        passwordError.classList.remove('hidden');
+        isValid = false;
+    } else {
+        passwordError.classList.add('hidden');
+    }
+
+    // Confirm password validation
+    const confirmPassword = document.getElementById('confirm_password');
+    const confirmPasswordError = document.getElementById('confirm-password-error');
+    if (password.value !== confirmPassword.value) {
+        confirmPasswordError.textContent = 'Passwords do not match';
+        confirmPasswordError.classList.remove('hidden');
+        isValid = false;
+    } else {
+        confirmPasswordError.classList.add('hidden');
+    }
+
+    // Terms checkbox validation
+    const terms = document.getElementById('terms');
+    if (!terms.checked) {
+        isValid = false;
+        // Add visual feedback for terms checkbox
+        terms.classList.add('ring-2', 'ring-red-500');
+    } else {
+        terms.classList.remove('ring-2', 'ring-red-500');
+    }
+
+    if (isValid) {
+        this.submit();
+    }
+});
+</script>
+{% endblock %}

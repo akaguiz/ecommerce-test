@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="flex justify-between items-center mb-6">
+    <h2 class="text-2xl font-bold text-gray-800">Items List</h2>
+    <a href="{{ url_for('add') }}" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded flex items-center gap-2">
+        <i class="fas fa-plus-circle"></i>
+        Add New Item
+    </a>
+</div>
+
+<div class="bg-white rounded-lg shadow overflow-hidden">
+    <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+            <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+            {% for item in items %}
+            <tr class="hover:bg-gray-50">
+                <td class="px-6 py-4 whitespace-nowrap">{{ item.name }}</td>
+                <td class="px-6 py-4">{{ item.description }}</td>
+                <td class="px-6 py-4 whitespace-nowrap">{{ item.quantity }}</td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex gap-2">
+                        <a href="{{ url_for('edit', id=item.id) }}" class="text-yellow-600 hover:text-yellow-700">
+                            <i class="fas fa-pencil"></i>
+                        </a>
+                        <a href="{{ url_for('delete', id=item.id) }}" class="text-red-600 hover:text-red-700" onclick="return confirm('Are you sure you want to delete this item?')">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
