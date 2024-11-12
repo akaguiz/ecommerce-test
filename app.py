@@ -173,5 +173,30 @@ def delete(id):
     flash('Item deleted successfully!', 'success')
     return redirect(url_for('index'))
 
+from flask import Flask, render_template, redirect, url_for, flash
+from flask_login import login_required, current_user
+
+# Your existing imports and app configuration here...
+
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    return render_template('index.html')
+
+# @app.route('/add')
+# @login_required
+# def add():
+#     return render_template('add.html')
+
+@app.route('/reports')
+@login_required
+def reports():
+    return render_template('reports.html')
+
+@app.route('/settings')
+@login_required
+def settings():
+    return render_template('settings.html')
+
 if __name__ == '__main__':
     app.run(debug=True)
