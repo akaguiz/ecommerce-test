@@ -1,51 +1,72 @@
+<!-- templates/reports.html -->
 {% extends "base.html" %}
 
-{% block title %}Reports - Inventory Pro{% endblock %}
-
-{% block page_title %}Reports{% endblock %}
-
 {% block content %}
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    <!-- Sales Report Card -->
-    <div class="glass-effect rounded-xl p-6 hover-scale">
-        <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold">Sales Report</h3>
-            <i class="fas fa-chart-line text-blue-500"></i>
-        </div>
-        <div class="space-y-4">
-            <div class="h-48 bg-gray-100 rounded-lg"></div>
-            <button class="w-full py-2 px-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
-                View Details
-            </button>
-        </div>
-    </div>
-
-    <!-- Inventory Status Card -->
-    <div class="glass-effect rounded-xl p-6 hover-scale">
-        <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold">Inventory Status</h3>
-            <i class="fas fa-box text-green-500"></i>
-        </div>
-        <div class="space-y-4">
-            <div class="h-48 bg-gray-100 rounded-lg"></div>
-            <button class="w-full py-2 px-4 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
-                View Details
-            </button>
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-6">Relatório de Vendas e Previsões por Produto</h1>
+    
+    <!-- Resumo Geral -->
+    <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-8">
+        <h2 class="text-xl font-semibold mb-4">Resumo dos Produtos</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for product_name, stats in product_statistics.items() %}
+            <div class="border rounded-lg p-4">
+                <h3 class="font-bold text-lg mb-2">{{ product_name }}</h3>
+                <ul class="space-y-2">
+                    <li>Total de Vendas: {{ stats.total_sales }}</li>
+                    <li>Quantidade Total Vendida: {{ stats.total_quantity }}</li>
+                    <li>Média por Venda: {{ stats.average_quantity }}</li>
+                    {% if not stats.needs_more_data %}
+                        <li>Previsão próximos 30 dias: {{ stats.predicted_next_30_days }}</li>
+                        <li>Média diária prevista: {{ stats.average_predicted_daily }}</li>
+                        <li>Precisão do modelo: {{ stats.model_accuracy }}%</li>
+                    {% else %}
+                        <li class="text-yellow-600">Necessita mais dados (mínimo 30 vendas)</li>
+                    {% endif %}
+                </ul>
+            </div>
+            {% endfor %}
         </div>
     </div>
 
-    <!-- Low Stock Alerts Card -->
-    <div class="glass-effect rounded-xl p-6 hover-scale">
-        <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold">Low Stock Alerts</h3>
-            <i class="fas fa-exclamation-triangle text-yellow-500"></i>
+    <!-- Seção de Previsões Detalhadas -->
+    {% if has_predictions %}
+        {% for product_name, prediction_data in product_predictions.items() %}
+        <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-8">
+            <h2 class="text-xl font-semibold mb-4">Previsões para {{ product_name }}</h2>
+            
+            <!-- Performance do Modelo -->
+            <div class="mb-6">
+                <h3 class="text-lg font-medium mb-2">Performance do Modelo</h3>
+                <p>Score de Treino: {{ prediction_data.train_score }}</p>
+                <p>Score de Teste: {{ prediction_data.test_score }}</p>
+            </div>
+
+            <!-- Tabela de Previsões -->
+            <div class="overflow-x-auto">
+                <table class="min-w-full table-auto">
+                    <thead>
+                        <tr class="bg-gray-100">
+                            <th class="px-4 py-2">Data</th>
+                            <th class="px-4 py-2">Vendas Previstas</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for prediction in prediction_data.predictions %}
+                        <tr class="{% if loop.index % 2 == 0 %}bg-gray-50{% endif %}">
+                            <td class="border px-4 py-2">{{ prediction.date }}</td>
+                            <td class="border px-4 py-2">{{ prediction.predicted_sales }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
-        <div class="space-y-4">
-            <div class="h-48 bg-gray-100 rounded-lg"></div>
-            <button class="w-full py-2 px-4 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors">
-                View Details
-            </button>
+        {% endfor %}
+    {% else %}
+        <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4" role="alert">
+            <p>Nenhum produto tem dados suficientes para previsões (mínimo 30 vendas por produto).</p>
         </div>
-    </div>
+    {% endif %}
 </div>
 {% endblock %}
